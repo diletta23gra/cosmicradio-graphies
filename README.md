@@ -8,5 +8,5 @@ Il progetto è un minisito interattivo focalizzato sulla sonificazione dei dati 
 Il codice è stato interamente sviluppato con la libreria **p5.js** e l'estensione **p5.sound.js** per la gestione dei flussi audio. L'interfaccia grafica simula una vera e propria interfaccia di scansione interattiva che risponde ai comandi dell'utente.
 
 ### Crediti e materiale utilizzato
-- **Audio:** File sonori delle sonificazioni planetarie presi da [[indica la fonte, es. Archivio NASA o p5.js web editor].](https://soundcloud.com/nasa/hubble-treasure-trove-sonification?in=nasa/sets/spookyspacesounds) 
+- **Audio:** File sonori delle sonificazioni planetarie presi da (https://soundcloud.com/nasa/hubble-treasure-trove-sonification?in=nasa/sets/spookyspacesounds) 
 - **Immagini:** Immagine di sfondo dell'archivio cosmico prelevata da Pexels.
