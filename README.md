@@ -9,4 +9,4 @@ Il codice è stato interamente sviluppato con la libreria **p5.js** e l'estensio
 
 ### Crediti e materiale utilizzato
 - **Audio:** File sonori delle sonificazioni planetarie presi da (https://soundcloud.com/nasa/hubble-treasure-trove-sonification?in=nasa/sets/spookyspacesounds) 
-- **Immagini:** Immagine di sfondo dell'archivio cosmico prelevata da Pexels.
+- **Immagini:** Immagine di sfondo dell'archivio cosmico prelevata da Pexels: https://pixabay.com/photos/cosmos-milky-way-night-sky-stars-1853491/
