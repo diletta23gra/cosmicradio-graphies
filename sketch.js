@@ -1,9 +1,11 @@
 /* =========================================================================
    COSMIC RADIO GRAPHIES // Diletta Grazioli
-   Biennio Graphic Design // Tecniche dei nuovi media integrati
+   Graphic Design // Tecniche dei nuovi media integrati
    
-Descrizione:
-Atlante interattivo dedicato alla transcodifica mediale delle onde elettromagnetiche catturate nello spazio dalle sonde NASA (Voyager, Cassini, Juno).
+   Descrizione:
+   Atlante interattivo dedicato alla transcodifica mediale delle onde 
+   elettromagnetiche e delle tempeste radio catturate nello spazio profondo 
+   dalle sonde NASA (Voyager, Cassini, Juno).
 ========================================================================= */
 
 let img;                  
@@ -22,7 +24,18 @@ let stato = "LANDING";
 let mostraLegenda = false;
 let mostraInfo = false;
 
-// --- Precaricamento degli asset multimediali ---
+// Elenco dei pianeti con le posizioni delle orbite
+const DATA_PIANETI = [
+  { nome: "MERCURIO", raggio: 45,  angolo: -1.2, interattivo: false }, 
+  { nome: "VENERE",   raggio: 75,  angolo: 0.6,  interattivo: false }, 
+  { nome: "TERRA",    raggio: 110, angolo: -0.2, interattivo: false }, 
+  { nome: "MARTE",    raggio: 145, angolo: 1.1,  interattivo: false }, 
+  { nome: "GIOVE",    raggio: 190, angolo: -0.4, interattivo: true,  statoDecode: "DECODE_GIOVE" },  
+  { nome: "SATURNO",  raggio: 240, angolo: 0.1,  interattivo: true,  statoDecode: "DECODE_SATURNO" },  
+  { nome: "URANO",    raggio: 290, angolo: -0.1, interattivo: true,  statoDecode: "DECODE_URANO" },  
+  { nome: "NETTUNO",  raggio: 340, angolo: 0.4,  interattivo: true,  statoDecode: "DECODE_NETTUNO" }   
+];
+
 function preload() {
   img = loadImage('pexels-cosmos-1853491.jpg');
   soundGenerale = loadSound('hubble-sonification-lensing-galaxy-cluster.mp3'); 
@@ -38,17 +51,14 @@ function preload() {
   imgNettuno = loadImage('foto_nettuno.jpg');
 }
 
-
 function setup() {
-  createCanvas(windowWidth, windowHeight);
+  createCanvas(windowWidth, windowHeight); 
   img.resize(width, height);
   fft = new p5.FFT();
 }
 
-
 function draw() {
   background(0); 
-  cursor(ARROW); // reset globale del mouse
   
   if (stato === "LANDING") {
     drawSchermataLanding();
@@ -61,27 +71,22 @@ function draw() {
   }
 }
 
-
-// --- SCHERMATA INTRODUTTIVA (LANDING & INTRO) ---
 function drawSchermataLanding() {
   if (!scanStarted) {
     textAlign(CENTER, CENTER);
     textFont('Orbitron');
-    textSize(12);
+    textSize(13); 
+    drawingContext.letterSpacing = '2px'; 
 
     let brilla = map(sin(frameCount * 0.05), -1, 1, 100, 255);
     fill(140, 210, 230, brilla);
     text("CLICCA PER AVVIARE LA SINTONIZZAZIONE RADIO", width / 2, height / 2);
   } 
   else if (!scanComplete) {
-    // avanzamento della linea sincronizzata con il tempo dell'audio
     if (soundGenerale.isPlaying()) {
-      let tempoCorrente = soundGenerale.currentTime();
-      let durataTotale = soundGenerale.duration();
-      scanX = map(tempoCorrente, 0, durataTotale, 0, width);
+      scanX = map(soundGenerale.currentTime(), 0, soundGenerale.duration(), 0, width);
     }
-    
-    // dimostrazione progressivo dello sfondo 
+
     if (scanX > 0) {
       image(img, 0, 0, scanX, height, 0, 0, scanX, height);
     }
@@ -94,12 +99,11 @@ function drawSchermataLanding() {
     beginShape();
     for (let i = 0; i < waveform.length; i += 4) {
       let y = map(i, 0, waveform.length, 0, height);
-      let waveOffset = waveform[i] * 150; 
-      vertex(scanX + waveOffset, y);
+      vertex(scanX + (waveform[i] * 150), y);
     }
     endShape();
 
-    if (scanX >= width - 2 || (scanStarted && !soundGenerale.isPlaying() && scanX > 10)) {
+    if (scanX >= width - 2 || (!soundGenerale.isPlaying() && scanX > 10)) {
       scanComplete = true;
       soundGenerale.stop(); 
       scanX = width; 
@@ -116,22 +120,21 @@ function drawSchermataLanding() {
     noStroke();
     textAlign(CENTER, CENTER);
     textFont('Orbitron');
-    textSize(26);
+    textSize(28); 
     textStyle(BOLD);
+    drawingContext.letterSpacing = '3px';
     text("COSMIC RADIO GRAPHIES", width / 2, height / 2 - 20);
 
     textStyle(NORMAL);
-    textSize(11);
+    textSize(12); 
+    drawingContext.letterSpacing = '1.5px';
     let pulsazione = map(sin(frameCount * 0.06), -1, 1, 100, 255);
     fill(240, 150, 60, map(pulsazione, 100, 255, 100, alphaPulsante));
-    text("ACCEDI ALL'ATLANTE ORBITALE", width / 2, height / 2 + 30);
+    text("ACCEDI ALL'ATLANTE ORBITALE", width / 2, height / 2 + 40);
   }
 }
 
-
-// --- FUNZIONE: MAPPA ATLANTE ---
 function drawSchermataAtlante() {
-  background(0);
   push(); tint(255, 20); image(img, 0, 0, width, height); pop();
 
   drawScenografiaBackground();
@@ -141,50 +144,31 @@ function drawSchermataAtlante() {
   let soleY = height * 0.52; 
 
   stroke(240, 150, 60, 100); strokeWeight(1); fill(240, 150, 60, 40); circle(soleX, soleY, 24); noStroke();
-  fill(120, 140, 160, 140); textFont('Orbitron'); textSize(9); textAlign(CENTER, CENTER);
+  fill(120, 140, 160, 140); textFont('Orbitron'); textSize(10); textAlign(CENTER, CENTER);
+  drawingContext.letterSpacing = '1px';
   text("SOLE", soleX, soleY + 22);
 
-  let pianeti = [
-    ["MERCURIO", 45,  -1.2, false], 
-    ["VENERE",   75,  0.6,  false], 
-    ["TERRA",    110, -0.2, false], 
-    ["MARTE",    145,  1.1, false], 
-    ["GIOVE",    190, -0.4, true],  
-    ["SATURNO",  240,  0.1, true],  
-    ["URANO",    290, -0.1, true],  
-    ["NETTUNO",  340,  0.4, true]   
-  ];
-
   let testoNotifica = "";
-  let coloreNotifica = color(120);
+  let coloreNotifica = [120, 120, 120];
 
-  for (let i = 0; i < pianeti.length; i++) {
-    let nome = pianeti[i][0];
-    let raggio = pianeti[i][1];
-    let angolo = pianeti[i][2];
-    let interattivo = pianeti[i][3];
+  for (let i = 0; i < DATA_PIANETI.length; i++) {
+    let p = DATA_PIANETI[i];
+    let pX = soleX + cos(p.angolo) * p.raggio;
+    let pY = soleY + sin(p.angolo) * p.raggio;
 
-    let pX = soleX + cos(angolo) * raggio;
-    let pY = soleY + sin(angolo) * raggio;
-
-    // disegno vettoriale delle orbite circolari
     noFill(); stroke(140, 210, 230, 60); strokeWeight(0.6);
     push();
     drawingContext.setLineDash([3, 5]); 
-    circle(soleX, soleY, raggio * 2);
+    circle(soleX, soleY, p.raggio * 2);
     pop();
 
-    let dMouse = dist(mouseX, mouseY, pX, pY);
-    let inHoverPianeta = dMouse < 14;
-    let inHoverTesto = mouseX > pX + 10 && mouseX < pX + 90 && mouseY > pY - 8 && mouseY < pY + 8;
-    let inHover = inHoverPianeta || inHoverTesto;
+    let inHover = dist(mouseX, mouseY, pX, pY) < 14 || (mouseX > pX + 10 && mouseX < pX + 90 && mouseY > pY - 8 && mouseY < pY + 8);
 
-    // differenziazione segnali attivi e fissi
-    if (interattivo) {
+    if (p.interattivo) {
       if (inHover && !mostraLegenda && !mostraInfo) {
         cursor(HAND);
-        testoNotifica = "SEGNALE EMISSIONE ATTIVO // " + nome + ". Clicca per decodificare il flusso.";
-        coloreNotifica = color(240, 150, 60);
+        testoNotifica = "SEGNALE EMISSIONE ATTIVO // " + p.nome + ". Clicca per decodificare il flusso.";
+        coloreNotifica = [240, 150, 60];
         stroke(240, 150, 60); fill(240, 150, 60, 100);
       } else {
         stroke(240, 150, 60, 150); fill(15, 20, 30);
@@ -192,12 +176,11 @@ function drawSchermataAtlante() {
       strokeWeight(1);
       circle(pX, pY, 12);
       noFill(); stroke(240, 150, 60, 50);
-      let pPulsa = map(sin(frameCount * 0.07 + i), -1, 1, 16, 24); 
-      circle(pX, pY, pPulsa);
+      circle(pX, pY, map(sin(frameCount * 0.07 + i), -1, 1, 16, 24));
     } else {
       if (inHover && !mostraLegenda && !mostraInfo) {
-        testoNotifica = "SEGNALE SCHERMATO // " + nome + " non possiede emissioni magnetosferiche.";
-        coloreNotifica = color(120, 130, 140);
+        testoNotifica = "SEGNALE SCHERMATO // " + p.nome + " non possiede emissioni magnetosferiche.";
+        coloreNotifica = [120, 130, 140];
         stroke(140); fill(90);
       } else {
         stroke(80, 90, 100, 100); fill(40, 45, 50);
@@ -206,67 +189,61 @@ function drawSchermataAtlante() {
       circle(pX, pY, 7); 
     }
 
-    noStroke(); fill(inHover ? 255 : 160); textAlign(LEFT, CENTER); textFont('Orbitron'); textSize(10);
+    noStroke(); fill(inHover ? 255 : 160); textAlign(LEFT, CENTER); textFont('Orbitron'); textSize(11); 
     textStyle(inHover ? BOLD : NORMAL);
-    text(nome, pX + 12, pY);
+    text(p.nome, pX + 12, pY);
   }
 
-  // Barra informativa inferiore
   textStyle(NORMAL); stroke(140, 210, 230, 20); fill(10, 15, 20, 180);
   rect(80, height - 105, width - 160, 28);
-  noStroke(); textAlign(CENTER, CENTER); fill(coloreNotifica); textSize(10);
-  if (testoNotifica === "") {
-    text("ESPLORA IL SISTEMA DI REPERTORIO MULTIMEDIALE POSIZIONANDO IL MIRINO SULLE ORBITE.", width/2, height - 91);
-  } else {
-    text(testoNotifica.toUpperCase(), width/2, height - 91);
-  }
+  noStroke(); textAlign(CENTER, CENTER); fill(coloreNotifica[0], coloreNotifica[1], coloreNotifica[2]); textSize(11);
+  text(testoNotifica === "" ? "ESPLORA IL SISTEMA DI REPERTORIO MULTIMEDIALE POSIZIONANDO IL MIRINO SULLE ORBITE." : testoNotifica.toUpperCase(), width/2, height - 91);
 
-  // --- Pulsanti per pannelli ---
-  disegnaPulsanteHub(80, height - 60, 180, 30, "SPECIFICHE DI SEGNALE", color(240, 150, 60));
-  disegnaPulsanteHub(width - 260, height - 60, 180, 30, "INFO & CREDITI", color(140, 210, 230));
+  disegnaPulsanteHub(80, height - 60, 200, 32, "SPECIFICHE DI SEGNALE", [240, 150, 60]);
+  disegnaPulsanteHub(width - 280, height - 60, 200, 32, "INFO & CREDITI", [140, 210, 230]);
 
   if (mostraLegenda) drawOverlayDati();
   if (mostraInfo) drawOverlayInfo();
 }
 
-
-// --- IDENTIKIT E FORMA D'ONDA ---
 function drawSchermataDecodifica() {
-  background(0);
   drawScenografiaBackground();
   drawIntestazioneFissa();
   
   let nomePianeta = stato.replace("DECODE_", "");
 
   textAlign(LEFT, TOP); textFont('Orbitron');
-  textSize(18); textStyle(BOLD); fill(240, 150, 60);
+  textSize(20); textStyle(BOLD); fill(240, 150, 60);
+  drawingContext.letterSpacing = '1.5px';
   text("DECODIFICA FLUSSO AUDIO // " + nomePianeta, 100, height * 0.15);
-  textSize(10); textStyle(NORMAL); fill(140, 210, 230, 180);
+  textSize(11); textStyle(NORMAL); fill(140, 210, 230, 180);
   text("ANALISI DELLO SPETTRO MAGNETICO IN CORSO", 100, height * 0.19);
 
-  let fotoX = 100; let fotoY = height * 0.28; let fotoSize = 190;        
-  let schedaX = fotoX + fotoSize + 50; let schedaY = height * 0.28; 
-  let schedaW = width - schedaX - 100; let gapY = 26;              
+  let fotoX = 100; 
+  let fotoY = height * 0.28; 
+  let fotoSize = 190;        
+  let schedaX = fotoX + fotoSize + 50; 
+  let schedaY = height * 0.28; 
+  let schedaW = width - schedaX - 100; 
 
-  let pianetaImmagini = { "GIOVE": imgGiove, "SATURNO": imgSaturno, "URANO": imgUrano, "NETTUNO": imgNettuno };
-  let fotoPianeta = pianetaImmagini[nomePianeta];
+  let fotoPianeta = { "GIOVE": imgGiove, "SATURNO": imgSaturno, "URANO": imgUrano, "NETTUNO": imgNettuno }[nomePianeta];
 
   if (fotoPianeta && fotoPianeta.width > 0) {
     push(); 
     let ctx = drawingContext;
     ctx.save(); ctx.beginPath();
     ctx.arc(fotoX + fotoSize/2, fotoY + fotoSize/2, fotoSize/2 - 2, 0, Math.PI * 2); 
-    ctx.clip();
+    ctx.clip(); 
     
     let srcX = 0, srcY = 0; let srcW = fotoPianeta.width; let srcH = fotoPianeta.height;
-    if (srcW > srcH) { srcX = (srcW - srcH) / 2; srcW = srcH; } 
-    else if (srcH > srcW) { srcY = (srcH - srcW) / 2; srcH = srcW; }
+    if (srcW > srcH) srcX = (srcW - srcH) / 2; else srcY = (srcH - srcW) / 2;
+    let sizeFit = srcW > srcH ? srcH : srcW;
 
     if (nomePianeta === "SATURNO") {
       let offsetSaturno = 25; 
-      image(fotoPianeta, fotoX + offsetSaturno, fotoY + offsetSaturno, fotoSize - (offsetSaturno * 2), fotoSize - (offsetSaturno * 2), srcX, srcY, srcW, srcH);
+      image(fotoPianeta, fotoX + offsetSaturno, fotoY + offsetSaturno, fotoSize - (offsetSaturno * 2), fotoSize - (offsetSaturno * 2), srcX, srcY, sizeFit, sizeFit);
     } else {
-      image(fotoPianeta, fotoX, fotoY, fotoSize, fotoSize, srcX, srcY, srcW, srcH);
+      image(fotoPianeta, fotoX, fotoY, fotoSize, fotoSize, srcX, srcY, sizeFit, sizeFit);
     }
     ctx.restore(); pop();         
   }
@@ -279,123 +256,195 @@ function drawSchermataDecodifica() {
   };
 
   let info = datiTecnici[nomePianeta];
-  stroke(240, 150, 60, 40); strokeWeight(1); noFill();
-  rect(schedaX - 15, schedaY - 15, schedaW + 20, fotoSize); noStroke();
+  
+  textWrap(WORD); 
+  textFont('Arial'); 
+  textStyle(NORMAL); 
+  textSize(14);
+  let rigaLeading = 20;
+  textLeading(rigaLeading); 
+  drawingContext.letterSpacing = '0px';
 
-  fill(240, 150, 60); textFont('Orbitron'); textStyle(BOLD); textSize(11);
+  let cursoreY = schedaY + 32;
+
+  let altezzaRiquadroFinale = max(240, fotoSize + 15);
+  stroke(240, 150, 60, 40); strokeWeight(1); noFill();
+  rect(schedaX - 15, schedaY - 15, schedaW + 20, altezzaRiquadroFinale); noStroke();
+
+  fill(240, 150, 60); textFont('Orbitron'); textStyle(BOLD); textSize(12); 
+  textAlign(LEFT, TOP);
   text("DATI DI RILEVAMENTO:", schedaX, schedaY);
   
-  textStyle(NORMAL); textFont('sans-serif'); textSize(12); fill(220);
+  textFont('Arial'); textStyle(NORMAL); fill(220); textLeading(rigaLeading);
   for(let i = 0; i < info.length; i++) {
-    if(i === info.length - 1) { fill(150); textStyle(ITALIC); } 
-    text(info[i], schedaX, schedaY + 28 + (i * gapY), schedaW - 10); 
+    if(i === info.length - 1) fill(150); 
+    text(info[i], schedaX, cursoreY, schedaW - 10);
+    cursoreY += rigaLeading + 14; 
   }
 
-  let coloriOnde = {
-    "GIOVE": color(240, 160, 50),    
-    "SATURNO": color(225, 200, 100), 
-    "URANO": color(100, 210, 230),   
-    "NETTUNO": color(60, 120, 240)   
-  };
-  let coloreOndaAttiva = coloriOnde[nomePianeta] || color(255);
+  let rgbOnda = { "GIOVE": [240, 160, 50], "SATURNO": [225, 200, 100], "URANO": [100, 210, 230], "NETTUNO": [60, 120, 240] }[nomePianeta] || [255, 255, 255];
 
   let waveform = fft.waveform();
-  noFill(); stroke(coloreOndaAttiva); strokeWeight(2);
-  
   let simulazioneOnda = waveform.every(v => v === 0 || v === -1); 
-  let waveStartX = 100; let waveEndX = width - 100; let waveCenterY = height * 0.68; 
+  let waveStartX = 100; let waveEndX = width - 100; let waveCenterY = height * 0.72; 
 
-  beginShape();
-  for (let i = 0; i < waveform.length; i += 4) {
-    let x = map(i, 0, waveform.length, waveStartX, waveEndX);
-    let yOffset = simulazioneOnda ? sin(i * 0.1 + frameCount * 0.15) * 35 : waveform[i] * 140; 
-    vertex(x, waveCenterY + yOffset);
+  if (nomePianeta === "GIOVE") {
+    noFill(); stroke(rgbOnda[0], rgbOnda[1], rgbOnda[2]); strokeWeight(2.5);
+    beginShape();
+    for (let i = 0; i < waveform.length; i += 4) {
+      let x = map(i, 0, waveform.length, waveStartX, waveEndX);
+      let yOffset = simulazioneOnda ? sin(i * 0.1 + frameCount * 0.15) * 55 : waveform[i] * 240; 
+      vertex(x, waveCenterY + yOffset);
+    }
+    endShape();
+  } 
+  else if (nomePianeta === "SATURNO") {
+    stroke(rgbOnda[0], rgbOnda[1], rgbOnda[2]); strokeWeight(3.5);
+    for (let i = 0; i < waveform.length; i += 6) {
+      let x = map(i, 0, waveform.length, waveStartX, waveEndX);
+      let yOffset = simulazioneOnda ? cos(i * 0.08 + frameCount * 0.1) * 40 : waveform[i] * 200;
+      point(x, waveCenterY + yOffset);
+    }
+  } 
+  else if (nomePianeta === "URANO") {
+    noFill(); stroke(rgbOnda[0], rgbOnda[1], rgbOnda[2]); strokeWeight(2);
+    beginShape();
+    for (let i = 0; i < waveform.length; i += 4) {
+      let x = map(i, 0, waveform.length, waveStartX, waveEndX);
+      let yOffset = simulazioneOnda ? sin(i * 0.2 + frameCount * 0.1) * 30 : waveform[i] * 160;
+      vertex(x, waveCenterY + yOffset);
+    }
+    endShape();
+    
+    stroke(rgbOnda[0], rgbOnda[1], rgbOnda[2], 80); strokeWeight(1);
+    beginShape();
+    for (let i = 0; i < waveform.length; i += 8) {
+      let x = map(i, 0, waveform.length, waveStartX, waveEndX);
+      let yOffset = simulazioneOnda ? cos(i * 0.15 + frameCount * 0.08) * 20 : waveform[i] * -100;
+      vertex(x, waveCenterY + yOffset);
+    }
+    endShape();
+  } 
+  else if (nomePianeta === "NETTUNO") {
+    stroke(rgbOnda[0], rgbOnda[1], rgbOnda[2]); strokeWeight(2);
+    for (let i = 0; i < waveform.length; i += 8) {
+      let x = map(i, 0, waveform.length, waveStartX, waveEndX);
+      let yOffset = simulazioneOnda ? sin(i * 0.15 + frameCount * 0.2) * 35 : waveform[i] * 180;
+      line(x, waveCenterY, x, waveCenterY + yOffset);
+    }
   }
-  endShape();
 
-  stroke(140, 210, 230, 20); line(waveStartX, waveCenterY + 60, waveEndX, waveCenterY + 60); noStroke();
-  fill(140, 210, 230, 120); textFont('Orbitron'); textStyle(NORMAL); textSize(8); textAlign(CENTER, TOP);
-  text("[ TRADUZIONE FLUSSO ONDE D'URTO INTERPLANETARIE ]", width / 2, waveCenterY + 68);
+  stroke(140, 210, 230, 20); line(waveStartX, waveCenterY + 75, waveEndX, waveCenterY + 75); noStroke();
+  
+  textAlign(CENTER, TOP); textFont('Orbitron'); textSize(9); fill(160, 170, 180);
+  text("[ TRADUZIONE FLUSSO ONDE D'URTO INTERPLANETARIE ]", width / 2, waveCenterY + 83);
 
-  textAlign(CENTER, CENTER);
-  disegnaPulsanteHub(width/2 - 110, height - 55, 220, 32, "SCOLLEGA SEGNALE", color(240, 150, 60));
+  disegnaPulsanteHub(width/2 - 110, height - 55, 220, 32, "SCOLLEGA SEGNALE", [240, 150, 60]);
 }
-
 
 function drawOverlayDati() {
-  fill(5, 10, 15, 240); stroke(240, 150, 60, 100); strokeWeight(1);
-  rect(100, height * 0.22, width - 200, height * 0.58);
+  fill(5, 10, 15, 245); stroke(240, 150, 60, 100); strokeWeight(1);
+  let boxH = min(height * 0.70, 540); 
+  let boxY = height * 0.15;
+  rect(100, boxY, width - 200, boxH);
   
   noStroke(); textAlign(LEFT, TOP); textFont('Orbitron'); textStyle(BOLD); fill(240, 150, 60); textSize(16);
-  text("SPECIFICHE DI SEGNALE METODOLOGICO", 140, height * 0.26);
+  text("SPECIFICHE DI SEGNALE METODOLOGICO", 140, boxY + 35);
   
-  textFont('sans-serif'); textStyle(NORMAL); textSize(12); fill(230);
-  let xSimbolo = 150; let xTesto = 195; let textW = width - xTesto - 160;
+  textWrap(WORD);
+  textFont('Arial'); textStyle(NORMAL); textSize(14); fill(210);
+  let overlayLeading = 20;
+  textLeading(overlayLeading);
+  drawingContext.letterSpacing = '0px';
   
-  let y1 = height * 0.33;
-  stroke(240, 150, 60, 180); noFill(); circle(xSimbolo, y1 + 6, 18);
-  fill(240, 150, 60); circle(xSimbolo, y1 + 6, 8); noStroke();
-  textStyle(BOLD); fill(240, 150, 60); text("SEGNALE EMISSIONE ATTIVO", xTesto, y1);
-  textStyle(NORMAL); fill(210); text("Indica un pianeta gassoso (come Giove). Il suo forte campo magnetico genera onde radio che le sonde sono riuscite a registrare. Questo nodo è interattivo e si può cliccare sulla mappa per ascoltarlo.", xTesto, y1 + 18, textW);
+  let xSimbolo = 150; let xTesto = 195; let textW = width - xTesto - 140;
+  let cursoreY = boxY + 95;
   
-  let y2 = height * 0.46;
-  stroke(120, 130, 140, 150); noFill(); circle(xSimbolo, y2 + 6, 16);
-  line(xSimbolo - 4, y2 + 2, xSimbolo + 4, y2 + 10); line(xSimbolo + 4, y2 + 2, xSimbolo - 4, y2 + 10); noStroke();
-  textStyle(BOLD); fill(120, 130, 140); text("SEGNALE SCHERMATO / ASSENZA DI ATTIVITÀ", xTesto, y2);
-  textStyle(NORMAL); fill(190); text("Indica un pianeta roccioso (come Marte). Poiché non ha un campo magnetico forte, non emette segnali radio da poter ascoltare. Per questo motivo il nodo non è cliccabile.", xTesto, y2 + 18, textW);
+  // Sezione 1
+  stroke(240, 150, 60, 180); noFill(); circle(xSimbolo, cursoreY + 6, 18);
+  fill(240, 150, 60); circle(xSimbolo, cursoreY + 6, 8); noStroke();
+  textFont('Orbitron'); textStyle(BOLD); fill(240, 150, 60); text("SEGNALE EMISSIONE ATTIVO", xTesto, cursoreY);
+  textFont('Arial'); textStyle(NORMAL); fill(210); textLeading(overlayLeading);
+  let t1 = "Indica un pianeta gassoso (come Giove). Il suo forte campo magnetico genera onde radio che le sonde sono riuscite a registrare. Questo nodo è interattivo e si può cliccare sulla mappa per ascoltarlo.";
+  text(t1, xTesto, cursoreY + 24, textW);
+  cursoreY += 110;
   
-  let y3 = height * 0.59;
+  // Sezione 2
+  stroke(120, 130, 140, 150); noFill(); circle(xSimbolo, cursoreY + 6, 16);
+  line(xSimbolo - 4, cursoreY + 2, xSimbolo + 4, cursoreY + 10); line(xSimbolo + 4, cursoreY + 2, xSimbolo - 4, cursoreY + 10); noStroke();
+  textFont('Orbitron'); textStyle(BOLD); fill(120, 130, 140); text("SEGNALE SCHERMATO / ASSENZA DI ATTIVITÀ", xTesto, cursoreY);
+  textFont('Arial'); textStyle(NORMAL); fill(190); textLeading(overlayLeading);
+  let t2 = "Indica un pianeta roccioso (come Marte). Poiché non ha un campo magnetico forte, non emette segnali radio da poter ascoltare. Per questo motivo il nodo non è cliccabile.";
+  text(t2, xTesto, cursoreY + 24, textW);
+  cursoreY += 110;
+  
+  // Sezione 3
   stroke(255, 180); noFill(); beginShape();
-  for (let i = -12; i <= 12; i++) { vertex(xSimbolo + i, y3 + 6 + sin(i * 0.4 + frameCount * 0.1) * 5); }
+  for (let i = -12; i <= 12; i++) { vertex(xSimbolo + i, cursoreY + 6 + sin(i * 0.4 + frameCount * 0.1) * 5); }
   endShape(); noStroke();
-  textStyle(BOLD); fill(255); text("SPETTRO DI REPERTORIO GENERATIVO (FFT)", xTesto, y3);
-  textStyle(NORMAL); fill(210); text("Mostra la forma dell'audio in tempo reale. L'algoritmo analizza le frequenze sonore della NASA e le traduce istantaneamente in onde grafiche in movimento.", xTesto, y3 + 18, textW);
+  textFont('Orbitron'); textStyle(BOLD); fill(255); text("SPETTRO DI REPERTORIO GENERATIVO (FFT)", xTesto, cursoreY);
+  textFont('Arial'); textStyle(NORMAL); fill(210); textLeading(overlayLeading);
+  let t3 = "Mostra la forma dell'audio in tempo reale. L'algoritmo analizza le frequenze sonore della NASA e le traduce istantaneamente in onde grafiche in movimento.";
+  text(t3, xTesto, cursoreY + 24, textW);
   
-  disegnaPulsanteHub(width - 240, height * 0.25, 100, 26, "CHIUDI [X]", color(240, 150, 60));
+  disegnaPulsanteHub(width - 240, boxY + 25, 100, 26, "CHIUDI [X]", [240, 150, 60]);
 }
-
 
 function drawOverlayInfo() {
-  fill(5, 10, 15, 240); stroke(140, 210, 230, 100); strokeWeight(1);
-  rect(100, height * 0.22, width - 200, height * 0.58);
+  fill(5, 10, 15, 245); stroke(140, 210, 230, 100); strokeWeight(1);
+  let boxH = min(height * 0.70, 520);
+  let boxY = height * 0.15;
+  rect(100, boxY, width - 200, boxH);
   
   noStroke(); textAlign(LEFT, TOP); textFont('Orbitron'); textStyle(BOLD); fill(140, 210, 230); textSize(16);
-  text("INFORMAZIONI SUL PROGETTO", 140, height * 0.26);
+  text("INFORMAZIONI SUL PROGETTO", 140, boxY + 35);
   
-  textFont('sans-serif'); textStyle(NORMAL); textSize(12); fill(210);
-  let textW = width - 280; let startY = height * 0.33;
+  textWrap(WORD);
+  textFont('Arial'); textStyle(NORMAL); textSize(14); fill(210);
+  let overlayLeading = 20;
+  textLeading(overlayLeading);
+  drawingContext.letterSpacing = '0px';
   
-  textStyle(BOLD); fill(140, 210, 230); text("AUTORE:", 140, startY);
-  textStyle(NORMAL); fill(220);
-  text("Progetto individuale realizzato da Diletta Grazioli per il corso di Tecniche dei Nuovi Media Integrati (Biennio di Graphic Design).", 140, startY + 16, textW);
+  let textW = width - 280; 
+  let cursoreY = boxY + 95;
+
+
+  textFont('Orbitron'); textStyle(BOLD); fill(140, 210, 230); text("AUTORE:", 140, cursoreY);
+  textFont('Arial'); textStyle(NORMAL); fill(220); textLeading(overlayLeading);
+  let r1 = "Progetto individuale realizzato da Diletta Grazioli per il corso di Tecniche dei Nuovi Media Integrati (Biennio di Graphic Design).";
+  text(r1, 140, cursoreY + 22, textW);
+  cursoreY += 75; // Distanza proporzionata
   
-  textStyle(BOLD); fill(140, 210, 230); text("OBIETTIVO COMUNICATIVO:", 140, startY + 65);
-  textStyle(NORMAL); fill(220);
-  text("Questo atlante esplora la transcodifica mediale, trasformando i dati radio e le onde magnetiche dello spazio in suoni e onde grafiche animate in tempo reale.", 140, startY + 81, textW);
+  textFont('Orbitron'); textStyle(BOLD); fill(140, 210, 230); text("OBIETTIVO COMUNICATIVO:", 140, cursoreY);
+  textFont('Arial'); textStyle(NORMAL); fill(220); textLeading(overlayLeading);
+  let r2 = "Questo atlante esplora la transcodifica mediale, trasformando i dati radio e le onde magnetiche dello spazio in suoni e onde grafiche animate in tempo reale.";
+  text(r2, 140, cursoreY + 22, textW);
+  cursoreY += 95; 
 
-  textStyle(BOLD); fill(140, 210, 230); text("FONTI DEI DATI:", 140, startY + 130);
-  textStyle(NORMAL); fill(220);
-  text("I suoni e i dati tecnici appartengono agli archivi pubblici della NASA e provengono dalle registrazioni storiche delle sonde Voyager, Cassini e Juno.", 140, startY + 146, textW);
+  textFont('Orbitron'); textStyle(BOLD); fill(140, 210, 230); text("FONTI DEI DATI:", 140, cursoreY);
+  textFont('Arial'); textStyle(NORMAL); fill(220); textLeading(overlayLeading);
+  let r3 = "I suoni e i dati tecnici appartengono agli archivi pubblici della NASA e provengono dalle registrazioni storiche delle sonde Voyager, Cassini e Juno.";
+  text(r3, 140, cursoreY + 22, textW);
+  cursoreY += 95; 
 
-  textStyle(BOLD); fill(140, 210, 230); text("PUBBLICO DI RIFERIMENTO:", 140, startY + 195);
-  textStyle(NORMAL); fill(190);
-  text("L'interfaccia è progettata per un pubblico dagli 8-10 anni in su, unendo un'estetica visiva da plancia di controllo a modalità di scoperta semplici e immediate.", 140, startY + 211, textW);
+  textFont('Orbitron'); textStyle(BOLD); fill(140, 210, 230); text("PUBBLICO DI RIFERIMENTO:", 140, cursoreY);
+  textFont('Arial'); textStyle(NORMAL); fill(190); textLeading(overlayLeading);
+  let r4 = "L'interfaccia è progettata per un pubblico dagli 8-10 anni in su, unendo un'estetica visiva da plancia di controllo a modalità di scoperta semplici e immediate.";
+  text(r4, 140, cursoreY + 22, textW);
 
-  disegnaPulsanteHub(width - 240, height * 0.25, 100, 26, "CHIUDI [X]", color(140, 210, 230));
+  disegnaPulsanteHub(width - 240, boxY + 25, 100, 26, "CHIUDI [X]", [140, 210, 230]);
 }
 
-
-// --- COMPONENTI GRAFICI ---
 function drawIntestazioneFissa() {
   noStroke(); textAlign(LEFT, TOP); textFont('Orbitron');
-  textSize(14); textStyle(BOLD); fill(255);
+  textSize(15); textStyle(BOLD); fill(255);
+  drawingContext.letterSpacing = '1px';
   text("COSMIC RADIO GRAPHIES", 80, height * 0.05);
-  textSize(9); textStyle(NORMAL); fill(140, 210, 230, 160);
-  text("By Diletta Grazioli // Archivio di Sonificazione", 80, height * 0.082);
+  textSize(10); textStyle(NORMAL); fill(140, 210, 230, 160);
+  text("Progetto di Diletta Grazioli // Archivio di Sonificazione NASA", 80, height * 0.082);
   stroke(140, 210, 230, 30); strokeWeight(0.5);
   line(80, height * 0.11, width - 80, height * 0.11); noStroke();
 }
-
 
 function drawScenografiaBackground() {
   stroke(140, 210, 230, 20); strokeWeight(0.5);
@@ -411,26 +460,25 @@ function drawScenografiaBackground() {
   noStroke();
 }
 
-
-function disegnaPulsanteHub(x, y, w, h, testo, coloreTema) {
+function disegnaPulsanteHub(x, y, w, h, testo, arrayRGB) {
   let sopraPulsante = mouseX > x && mouseX < x + w && mouseY > y && mouseY < y + h;
-  let r = red(coloreTema); let g = green(coloreTema); let b = blue(coloreTema);
 
   if (sopraPulsante) {
-    cursor(HAND); fill(r, g, b, 35); stroke(coloreTema); strokeWeight(1.5); rect(x, y, w, h);
+    cursor(HAND); fill(arrayRGB[0], arrayRGB[1], arrayRGB[2], 35); stroke(arrayRGB[0], arrayRGB[1], arrayRGB[2]); strokeWeight(1.5); rect(x, y, w, h);
     fill(255); noStroke();
   } else {
-    fill(8, 12, 18, 180); stroke(r, g, b, 75); strokeWeight(1); rect(x, y, w, h);
+    fill(8, 12, 18, 180); stroke(arrayRGB[0], arrayRGB[1], arrayRGB[2], 75); strokeWeight(1); rect(x, y, w, h);
     fill(220); noStroke();
   }
-  textFont('Orbitron'); textStyle(NORMAL); textSize(10); textAlign(CENTER, CENTER);
+  textFont('Orbitron'); textStyle(NORMAL); textSize(11); textAlign(CENTER, CENTER);
+  drawingContext.letterSpacing = '1px';
   text(testo, x + w/2, y + h/2);
 }
 
-
-// --- FUNZIONE MOUSE ---
 function mousePressed() {
-  userStartAudio();
+  userStartAudio(); 
+
+  let boxY = height * 0.15;
 
   if (stato === "LANDING") {
     if (!scanStarted) {
@@ -438,58 +486,41 @@ function mousePressed() {
       if (soundGenerale.isLoaded()) { soundGenerale.setVolume(0.25); soundGenerale.play(); }
     } 
     else if (scanComplete) {
-      if (mouseX > width/2 - 100 && mouseX < width/2 + 100 && mouseY > height/2 + 10 && mouseY < height/2 + 50) {
+      if (mouseX > width/2 - 100 && mouseX < width/2 + 100 && mouseY > height/2 + 10 && mouseY < height/2 + 60) {
         stato = "ATLANTE"; 
       }
     }
   }
   else if (stato === "ATLANTE") {
-    if (mostraLegenda) {
-      if (mouseX > width - 240 && mouseX < width - 140 && mouseY > height * 0.25 && mouseY < height * 0.25 + 26) { mostraLegenda = false; return; }
-    }
-    if (mostraInfo) {
-      if (mouseX > width - 240 && mouseX < width - 140 && mouseY > height * 0.25 && mouseY < height * 0.25 + 26) { mostraInfo = false; return; }
-    }
-
+    if (mostraLegenda && mouseX > width - 240 && mouseX < width - 140 && mouseY > boxY + 25 && mouseY < boxY + 51) { mostraLegenda = false; return; }
+    if (mostraInfo && mouseX > width - 240 && mouseX < width - 140 && mouseY > boxY + 25 && mouseY < boxY + 51) { mostraInfo = false; return; }
     if (mostraLegenda || mostraInfo) return;
 
-    if (mouseX > 80 && mouseX < 260 && mouseY > height - 60 && mouseY < height - 30) { mostraLegenda = true; return; }
-    if (mouseX > width - 260 && mouseX < width - 80 && mouseY > height - 60 && mouseY < height - 30) { mostraInfo = true; return; }
+    if (mouseX > 80 && mouseX < 280 && mouseY > height - 60 && mouseY < height - 30) { mostraLegenda = true; return; }
+    if (mouseX > width - 280 && mouseX < width - 80 && mouseY > height - 60 && mouseY < height - 30) { mostraInfo = true; return; }
 
     let soleX = width * 0.5; 
     let soleY = height * 0.52;
-    
-    // MATRICE PERFETTAMENTE SINCRONIZZATA CON IL DRAW()
-    let pianetiInterattivi = [
-      ["GIOVE",    190, -0.4, "DECODE_GIOVE",    soundGiove],
-      ["SATURNO",  240,  0.1, "DECODE_SATURNO",  soundSaturno],
-      ["URANO",    290, -0.1, "DECODE_URANO",    soundUrano],
-      ["NETTUNO",  340,  0.4, "DECODE_NETTUNO",  soundNettuno]
-    ];
 
-    for (let p of pianetiInterattivi) {
-      let raggio = p[1];
-      let angolo = p[2];
-      let pX = soleX + cos(angolo) * raggio;
-      let pY = soleY + sin(angolo) * raggio;
-      
-      let dMouse = dist(mouseX, mouseY, pX, pY);
-      let inHoverPianeta = dMouse < 14;
-      let inHoverTesto = mouseX > pX + 10 && mouseX < pX + 90 && mouseY > pY - 8 && mouseY < pY + 8;
+    for (let p of DATA_PIANETI) {
+      if (!p.interattivo) continue;
+      let pX = soleX + cos(p.angolo) * p.raggio;
+      let pY = soleY + sin(p.angolo) * p.raggio;
 
-      if (inHoverPianeta || inHoverTesto) {
-        stato = p[3];
-        if (p[4] && p[4].isLoaded()) { p[4].setVolume(0.4); p[4].play(); }
+      if (dist(mouseX, mouseY, pX, pY) < 14 || (mouseX > pX + 10 && mouseX < pX + 90 && mouseY > pY - 8 && mouseY < pY + 8)) {
+        stato = p.statoDecode;
+        let s = { "GIOVE": soundGiove, "SATURNO": soundSaturno, "URANO": soundUrano, "NETTUNO": soundNettuno }[p.nome];
+        if (s && s.isLoaded()) { s.setVolume(0.4); s.play(); }
         return;
       }
     }
   }
   else if (stato.startsWith("DECODE_")) {
     if (mouseX > width/2 - 110 && mouseX < width/2 + 110 && mouseY > height - 55 && mouseY < height - 23) {
-      if (soundGiove && soundGiove.isPlaying()) soundGiove.stop(); 
-      if (soundSaturno && soundSaturno.isPlaying()) soundSaturno.stop(); 
-      if (soundUrano && soundUrano.isPlaying()) soundUrano.stop();
-      if (soundNettuno && soundNettuno.isPlaying()) soundNettuno.stop();
+      if (soundGiove?.isPlaying()) soundGiove.stop(); 
+      if (soundSaturno?.isPlaying()) soundSaturno.stop(); 
+      if (soundUrano?.isPlaying()) soundUrano.stop();
+      if (soundNettuno?.isPlaying()) soundNettuno.stop();
       stato = "ATLANTE";
     }
   }
@@ -499,5 +530,3 @@ function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
   img.resize(width, height);
 }
-
-
